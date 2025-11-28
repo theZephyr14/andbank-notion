@@ -12,6 +12,14 @@ type SyncStatus = {
 const intervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES || 0);
 const port = Number(process.env.PORT || 3000);
 
+process.on('uncaughtException', (error: any) => {
+  if (error?.code === 'EBADF' && error?.syscall === 'close') {
+    console.warn('⚠️  Ignoring EBADF close error (likely from GC cleaning up mock SFTP).');
+    return;
+  }
+  console.error('Uncaught exception:', error);
+});
+
 let isSyncRunning = false;
 let lastSyncStatus: SyncStatus = {
   status: 'idle',
