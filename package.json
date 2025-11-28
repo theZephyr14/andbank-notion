@@ -12,6 +12,7 @@
     "mock-sftp": "tsx src/mock-sftp/server.ts",
     "sync": "tsx src/sync-worker/index.ts",
     "sync:loop": "tsx src/index.ts",
+    "csv-storage": "tsx src/csv-storage/server.ts",
     "find-db": "tsx src/helpers/find-database.ts",
     "schema": "tsx src/helpers/check-schema.ts"
   },
@@ -24,9 +25,11 @@
   "license": "MIT",
   "dependencies": {
     "@notionhq/client": "^2.2.15",
+    "@types/multer": "^2.0.0",
     "csv-parse": "^6.1.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "multer": "^2.0.2",
     "ssh2": "^1.17.0",
     "ssh2-sftp-client": "^12.0.1"
   },

@@ -1,5 +1,19 @@
 services:
-  # Single web service that exposes health endpoints and runs the sync loop
+  # CSV Storage Service - stores and serves the CSV file
+  - type: web
+    name: csv-storage-service
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run csv-storage
+    envVars:
+      - key: CSV_STORAGE_PATH
+        value: data/loans.csv
+      - key: CSV_UPLOAD_PASSWORD
+        sync: false  # Set a secure password in Render dashboard
+    healthCheckPath: /
+
+  # Sync Service - fetches CSV and syncs to Notion
   - type: web
     name: notion-sync-service
     env: node
@@ -14,7 +28,9 @@ services:
       - key: NOTION_DATABASE_MAPPING
         sync: false  # Optional JSON mapping for multiple banks
       - key: DATA_SOURCE
-        value: sftp  # Options: sftp | mock-http
+        value: csv-storage  # Options: csv-storage | sftp | mock-http
+      - key: CSV_STORAGE_URL
+        value: https://csv-storage-service.onrender.com/loans.csv  # Update with your actual service URL after deployment
       - key: SFTP_HOST
         value: localhost  # Update with real SFTP host when available
       - key: SFTP_PORT
@@ -26,7 +42,7 @@ services:
       - key: SFTP_REMOTE_PATH
         value: /loans.csv  # Update with real CSV path when available
       - key: AUTO_START_MOCK_SFTP
-        value: "true"  # Set to false when using real SFTP
+        value: "false"  # Not needed when using CSV storage service
       - key: SYNC_INTERVAL_MINUTES
         value: 15
 

@@ -89,6 +89,31 @@ export class SftpBankFetcher implements DataFetcher {
   }
 }
 
+// HTTP CSV fetcher - fetches CSV from the CSV storage service
+export class HttpCsvFetcher implements DataFetcher {
+  private csvUrl: string;
+
+  constructor(csvUrl?: string) {
+    this.csvUrl = csvUrl || process.env.CSV_STORAGE_URL || 'http://localhost:10001/loans.csv';
+  }
+
+  async fetch(): Promise<LoanRecord[]> {
+    try {
+      const response = await fetch(this.csvUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+      }
+      const csvText = await response.text();
+      const loans = parseLoanCsv(csvText);
+      console.log(`✅ Fetched ${loans.length} loans from CSV storage (${this.csvUrl})`);
+      return loans;
+    } catch (error) {
+      console.error('❌ Error fetching CSV from HTTP:', error);
+      throw error;
+    }
+  }
+}
+
 function toBuffer(input: Buffer | string | Readable): Promise<Buffer> {
   if (Buffer.isBuffer(input)) {
     return Promise.resolve(input);
@@ -110,6 +135,10 @@ export function buildFetcher(): DataFetcher {
 
   if (mode === 'sftp' || mode === 'mock-sftp') {
     return new SftpBankFetcher();
+  }
+
+  if (mode === 'csv-storage' || mode === 'http-csv') {
+    return new HttpCsvFetcher();
   }
 
   return new MockBankFetcher();
