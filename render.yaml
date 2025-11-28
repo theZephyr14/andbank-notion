@@ -1,20 +1,18 @@
 services:
-  # Notion Sync Worker (runs every 15 minutes automatically)
-  # Note: Mock services (mock-sftp, mock-bank) are for local testing only
-  # For production, use real SFTP credentials or set AUTO_START_MOCK_SFTP=true
-  - type: worker
-    name: notion-sync-worker
+  # Single web service that exposes health endpoints and runs the sync loop
+  - type: web
+    name: notion-sync-service
     env: node
     plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm run sync:loop
+    startCommand: npm run start
     envVars:
       - key: NOTION_TOKEN
         sync: false  # Set this in Render dashboard
       - key: NOTION_DATABASE_ID
-        sync: false  # Set this in Render dashboard
+        sync: false  # Optional single database
       - key: NOTION_DATABASE_MAPPING
-        sync: false  # Optional JSON mapping
+        sync: false  # Optional JSON mapping for multiple banks
       - key: DATA_SOURCE
         value: sftp  # Options: sftp | mock-http
       - key: SFTP_HOST

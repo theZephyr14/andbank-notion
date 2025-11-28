@@ -62,9 +62,11 @@ Automatically sync loan data from Andbank to a Notion database. Uses a **mock SF
 
 4. **Run sync worker** (in another terminal):
    - **One-time sync**: `npm run sync`
-   - **Auto-sync every 15 minutes**: `npm run sync:loop`
+   - **Auto-sync + HTTP health endpoint**: `npm run sync:loop`
    
-   The worker will connect to SFTP, download the CSV, parse it, and update Notion.
+   When using `sync:loop`, an HTTP server listens on `PORT` (default 3000) and exposes:
+   - `GET /health` → current sync status
+   - `POST /sync` → manually trigger a sync
 
 5. **Edit test data** (optional):
    - Edit `data/loans.csv` to test different scenarios
@@ -72,35 +74,20 @@ Automatically sync loan data from Andbank to a Notion database. Uses a **mock SF
 
 ## 🌐 Deploy to Render
 
-**Option 1: Use `render.yaml` (Recommended)**
-1. Push your code to GitHub
-2. In Render dashboard, create a new "Blueprint" and connect your repo
-3. Render will automatically create all services from `render.yaml`
-4. Set `NOTION_TOKEN` and `NOTION_DATABASE_ID` in the sync worker's environment variables
-
-**Option 2: Manual Setup**
-
-1. **Deploy Mock SFTP Server**:
-   - Create a new Web Service
-   - Build: `npm install && npm run build`
-   - Start: `npm run mock-sftp`
-   - Port: 2222
-
-2. **Deploy Sync Worker**:
-   - Create a new Background Worker
-   - Build: `npm install && npm run build`
-   - Start: `npm run sync:loop` (for auto-sync every 15 minutes)
-   - Environment variables:
-     - `NOTION_TOKEN`: Your Notion integration token
-     - `NOTION_DATABASE_ID`: Your database ID
-     - `DATA_SOURCE=sftp`
-     - `SFTP_HOST`: Hostname of mock SFTP server
-     - `SFTP_PORT=2222`
-     - `SFTP_USERNAME=andbank`
-     - `SFTP_PASSWORD=sftp-test`
-    - `SFTP_REMOTE_PATH=/loans.csv`
-    - `AUTO_START_MOCK_SFTP=false` (true only when using local mock)
-     - `SYNC_INTERVAL_MINUTES=15`
+**Deployment with `render.yaml`**
+1. Push your code to GitHub.
+2. In Render dashboard, create a new **Blueprint** and connect your repo.
+3. Render creates a single web service (`notion-sync-service`) that:
+   - Runs `npm run start` (serves `/health` and `/sync`)
+   - Auto-starts the mock SFTP server if `AUTO_START_MOCK_SFTP=true`
+4. In the service → **Environment** tab, set:
+   - `NOTION_TOKEN`
+   - `NOTION_DATABASE_MAPPING` (or `NOTION_DATABASE_ID`)
+   - `DATA_SOURCE=sftp`
+   - `SFTP_HOST`, `SFTP_PORT`, `SFTP_USERNAME`, `SFTP_PASSWORD`, `SFTP_REMOTE_PATH`
+   - `AUTO_START_MOCK_SFTP=true` (set to `false` when you switch to the bank’s SFTP)
+   - `SYNC_INTERVAL_MINUTES=15`
+5. Deploy. Render assigns `PORT`; the service listens on that port automatically.
 
 ## 🔄 Connect Real Andbank SFTP
 

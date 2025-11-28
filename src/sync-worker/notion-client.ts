@@ -24,9 +24,10 @@ export class NotionSyncClient {
         database_id: this.databaseId
       });
       const databaseAny = database as any;
+      const properties = Object.entries(databaseAny.properties || {}) as [string, any][];
 
       // Find the title property (it's the one with type 'title')
-      for (const [key, prop] of Object.entries(databaseAny.properties || {})) {
+      for (const [key, prop] of properties) {
         if (prop.type === 'title') {
           this.titlePropertyName = key;
           return key;
@@ -77,11 +78,12 @@ export class NotionSyncClient {
   private async getCurrentPageValues(pageId: string): Promise<Partial<LoanRecord> | null> {
     try {
       const page = (await this.notion.pages.retrieve({ page_id: pageId })) as any;
-      const props = page.properties || {};
+      const props = (page.properties || {}) as Record<string, any>;
 
       // Find the title property dynamically
       let titlePropName = 'Financing Institution';
-      for (const [key, prop] of Object.entries(props)) {
+      const propEntries = Object.entries(props) as [string, any][];
+      for (const [key, prop] of propEntries) {
         if (prop.type === 'title') {
           titlePropName = key;
           break;

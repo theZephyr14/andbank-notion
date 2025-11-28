@@ -1,25 +1,90 @@
 import 'dotenv/config';
+import express from 'express';
 import { main } from './sync-worker/index.js';
 
-const intervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES || 0);
+type SyncStatus = {
+  status: 'idle' | 'running' | 'success' | 'error';
+  lastRun: string | null;
+  trigger: 'auto' | 'manual';
+  message?: string;
+};
 
-async function runOnce() {
+const intervalMinutes = Number(process.env.SYNC_INTERVAL_MINUTES || 0);
+const port = Number(process.env.PORT || 3000);
+
+let isSyncRunning = false;
+let lastSyncStatus: SyncStatus = {
+  status: 'idle',
+  lastRun: null,
+  trigger: 'auto',
+  message: 'Not run yet'
+};
+
+async function runOnce(trigger: 'auto' | 'manual' = 'auto') {
+  if (isSyncRunning) {
+    console.log('⚠️  Sync already running, skipping new request');
+    return;
+  }
+
+  isSyncRunning = true;
+  lastSyncStatus = { status: 'running', lastRun: new Date().toISOString(), trigger };
+
   try {
     await main();
-  } catch (error) {
+    lastSyncStatus = {
+      status: 'success',
+      lastRun: new Date().toISOString(),
+      trigger,
+      message: 'Sync completed successfully'
+    };
+  } catch (error: any) {
     console.error('Sync cycle failed:', error);
+    lastSyncStatus = {
+      status: 'error',
+      lastRun: new Date().toISOString(),
+      trigger,
+      message: error?.message || 'Unknown error'
+    };
+  } finally {
+    isSyncRunning = false;
   }
 }
 
-async function start() {
-  await runOnce();
+async function startScheduler() {
+  // Run immediately once
+  await runOnce('auto');
 
   if (intervalMinutes > 0) {
     const intervalMs = intervalMinutes * 60 * 1000;
     console.log(`⏰ Scheduling sync every ${intervalMinutes} minute(s)`);
-    setInterval(runOnce, intervalMs);
+    setInterval(() => runOnce('auto'), intervalMs);
   }
 }
 
-start().catch(console.error);
+const app = express();
+
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'ok',
+    sync: lastSyncStatus,
+    isSyncRunning
+  });
+});
+
+app.post('/sync', async (_req, res) => {
+  if (isSyncRunning) {
+    res.status(429).json({ status: 'running', message: 'Sync already in progress' });
+    return;
+  }
+
+  runOnce('manual').catch(() => {});
+  res.json({ status: 'queued', message: 'Manual sync started' });
+});
+
+app.listen(port, () => {
+  console.log(`🌐 Sync service listening on port ${port}`);
+  startScheduler().catch((error) => {
+    console.error('Failed to start scheduler:', error);
+  });
+});
 

@@ -22,8 +22,9 @@ async function checkSchema() {
     console.log(`Title: ${databaseAny.title?.[0]?.plain_text || 'Untitled'}\n`);
     console.log('Properties:');
     
-    for (const [key, prop] of Object.entries(databaseAny.properties || {})) {
-      const type = prop.type;
+    const properties = Object.entries(databaseAny.properties || {}) as [string, any][];
+    for (const [key, prop] of properties) {
+      const type = prop?.type;
       console.log(`  - ${key}: ${type}`);
       if (type === 'title' || type === 'rich_text') {
         console.log(`    (This is a ${type} property)`);
