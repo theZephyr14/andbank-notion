@@ -1,3 +1,4 @@
+// @ts-nocheck
 import 'dotenv/config';
 import ssh2 from 'ssh2';
 import fs from 'fs';

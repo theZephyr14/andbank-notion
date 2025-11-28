@@ -1,37 +1,7 @@
 services:
-  # Mock SFTP Server (for testing - mimics real Andbank SFTP)
-  - type: web
-    name: mock-sftp-server
-    env: node
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run mock-sftp
-    envVars:
-      - key: MOCK_SFTP_PORT
-        value: 2222
-      - key: MOCK_SFTP_HOST
-        value: 0.0.0.0
-      - key: MOCK_SFTP_ROOT
-        value: data
-      - key: MOCK_SFTP_USER
-        value: andbank
-      - key: MOCK_SFTP_PASS
-        value: sftp-test
-
-  # Mock Bank Data Service (HTTP alternative - for testing)
-  - type: web
-    name: mock-bank-service
-    env: node
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run mock-bank
-    envVars:
-      - key: MOCK_BANK_PORT
-        value: 10000
-      - key: MOCK_BANK_VARIATIONS
-        value: true  # Enable random variations for testing
-
   # Notion Sync Worker (runs every 15 minutes automatically)
+  # Note: Mock services (mock-sftp, mock-bank) are for local testing only
+  # For production, use real SFTP credentials or set AUTO_START_MOCK_SFTP=true
   - type: worker
     name: notion-sync-worker
     env: node
@@ -48,20 +18,17 @@ services:
       - key: DATA_SOURCE
         value: sftp  # Options: sftp | mock-http
       - key: SFTP_HOST
-        fromService:
-          name: mock-sftp-server
-          type: web
-          property: host
+        value: localhost  # Update with real SFTP host when available
       - key: SFTP_PORT
-        value: 2222
+        value: 2222  # Update with real SFTP port when available
       - key: SFTP_USERNAME
-        value: andbank
+        value: andbank  # Update with real SFTP username when available
       - key: SFTP_PASSWORD
-        value: sftp-test
+        value: sftp-test  # Update with real SFTP password when available
       - key: SFTP_REMOTE_PATH
-        value: /loans.csv
+        value: /loans.csv  # Update with real CSV path when available
       - key: AUTO_START_MOCK_SFTP
-        value: "false"
+        value: "true"  # Set to false when using real SFTP
       - key: SYNC_INTERVAL_MINUTES
         value: 15
 

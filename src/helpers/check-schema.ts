@@ -16,12 +16,13 @@ async function checkSchema() {
     const database = await notion.databases.retrieve({
       database_id: databaseId
     });
+    const databaseAny = database as any;
 
     console.log('📊 Database Schema:\n');
-    console.log(`Title: ${database.title[0]?.plain_text || 'Untitled'}\n`);
+    console.log(`Title: ${databaseAny.title?.[0]?.plain_text || 'Untitled'}\n`);
     console.log('Properties:');
     
-    for (const [key, prop] of Object.entries(database.properties)) {
+    for (const [key, prop] of Object.entries(databaseAny.properties || {})) {
       const type = prop.type;
       console.log(`  - ${key}: ${type}`);
       if (type === 'title' || type === 'rich_text') {

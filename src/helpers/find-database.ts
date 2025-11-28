@@ -42,8 +42,9 @@ async function findDatabase() {
     
     for (const db of response.results) {
       if (db.object === 'database') {
-        const title = db.title?.[0]?.plain_text || 'Untitled';
-        const id = db.id;
+        const databaseAny = db as any;
+        const title = databaseAny.title?.[0]?.plain_text || 'Untitled';
+        const id = databaseAny.id;
         console.log(`📊 ${title}`);
         console.log(`   ID: ${id}`);
         console.log(`   URL: https://www.notion.so/${id.replace(/-/g, '')}`);

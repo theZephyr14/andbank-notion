@@ -23,9 +23,10 @@ export class NotionSyncClient {
       const database = await this.notion.databases.retrieve({
         database_id: this.databaseId
       });
+      const databaseAny = database as any;
 
       // Find the title property (it's the one with type 'title')
-      for (const [key, prop] of Object.entries(database.properties)) {
+      for (const [key, prop] of Object.entries(databaseAny.properties || {})) {
         if (prop.type === 'title') {
           this.titlePropertyName = key;
           return key;
@@ -75,8 +76,8 @@ export class NotionSyncClient {
    */
   private async getCurrentPageValues(pageId: string): Promise<Partial<LoanRecord> | null> {
     try {
-      const page = await this.notion.pages.retrieve({ page_id: pageId });
-      const props = page.properties;
+      const page = (await this.notion.pages.retrieve({ page_id: pageId })) as any;
+      const props = page.properties || {};
 
       // Find the title property dynamically
       let titlePropName = 'Financing Institution';
@@ -113,16 +114,16 @@ export class NotionSyncClient {
   /**
    * Compare two numbers with tolerance for floating point precision
    */
-  private numbersEqual(a: number | null, b: number | null, tolerance = 0.01): boolean {
-    if (a === null || b === null) return a === b;
+  private numbersEqual(a: number | null | undefined, b: number | null | undefined, tolerance = 0.01): boolean {
+    if (a === null || a === undefined || b === null || b === undefined) return a === b;
     return Math.abs(a - b) < tolerance;
   }
 
   /**
    * Compare two strings (handling empty/null cases)
    */
-  private stringsEqual(a: string | null, b: string | null): boolean {
-    const normalize = (s: string | null) => (s || '').trim() || '(Empty)';
+  private stringsEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+    const normalize = (s: string | null | undefined) => (s || '').trim() || '(Empty)';
     return normalize(a) === normalize(b);
   }
 
@@ -254,7 +255,8 @@ export class NotionSyncClient {
       const database = await this.notion.databases.retrieve({
         database_id: this.databaseId
       });
-      console.log(`✅ Connected to Notion database: "${database.title[0]?.plain_text || 'Unknown'}"`);
+      const databaseAny = database as any;
+      console.log(`✅ Connected to Notion database: "${databaseAny.title?.[0]?.plain_text || 'Unknown'}"`);
       return true;
     } catch (error) {
       console.error('❌ Failed to connect to Notion database:', error);

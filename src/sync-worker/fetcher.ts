@@ -22,7 +22,7 @@ export class MockBankFetcher implements DataFetcher {
       if (!response.ok) {
         throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
       }
-      const data: BankDataResponse = await response.json();
+      const data = (await response.json()) as BankDataResponse;
       console.log(`✅ Fetched ${data.loans.length} loans (last updated: ${data.lastUpdated})`);
       return data.loans;
     } catch (error) {
