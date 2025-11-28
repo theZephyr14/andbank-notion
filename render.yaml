@@ -44,5 +44,5 @@ services:
       - key: AUTO_START_MOCK_SFTP
         value: "false"  # Not needed when using CSV storage service
       - key: SYNC_INTERVAL_MINUTES
-        value: 15
+        value: 1
 

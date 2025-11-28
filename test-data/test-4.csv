@@ -1,0 +1,10 @@
+Financing Institution,Entity,Credit Line Amount,Available Credit,Interest Rate
+Andbank,Aribau Ventures SL,50000,25000,0.5
+Andbank,Oikos Builders SL,100000,50000,1.0
+Andbank,Esteban Almirall,150000,75000,1.5
+Andbank,Test Entity 1,200000,100000,2.0
+YesBank,Aribau Ventures SL,250000,125000,2.5
+YesBank,Oikos Builders SL,300000,150000,3.0
+YesBank,Esteban Almirall,350000,175000,3.5
+YesBank,Test Entity 2,400000,200000,4.0
+
