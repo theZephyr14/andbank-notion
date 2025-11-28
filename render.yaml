@@ -1,0 +1,67 @@
+services:
+  # Mock SFTP Server (for testing - mimics real Andbank SFTP)
+  - type: web
+    name: mock-sftp-server
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run mock-sftp
+    envVars:
+      - key: MOCK_SFTP_PORT
+        value: 2222
+      - key: MOCK_SFTP_HOST
+        value: 0.0.0.0
+      - key: MOCK_SFTP_ROOT
+        value: data
+      - key: MOCK_SFTP_USER
+        value: andbank
+      - key: MOCK_SFTP_PASS
+        value: sftp-test
+
+  # Mock Bank Data Service (HTTP alternative - for testing)
+  - type: web
+    name: mock-bank-service
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run mock-bank
+    envVars:
+      - key: MOCK_BANK_PORT
+        value: 10000
+      - key: MOCK_BANK_VARIATIONS
+        value: true  # Enable random variations for testing
+
+  # Notion Sync Worker (runs every 15 minutes automatically)
+  - type: worker
+    name: notion-sync-worker
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run sync:loop
+    envVars:
+      - key: NOTION_TOKEN
+        sync: false  # Set this in Render dashboard
+      - key: NOTION_DATABASE_ID
+        sync: false  # Set this in Render dashboard
+      - key: NOTION_DATABASE_MAPPING
+        sync: false  # Optional JSON mapping
+      - key: DATA_SOURCE
+        value: sftp  # Options: sftp | mock-http
+      - key: SFTP_HOST
+        fromService:
+          name: mock-sftp-server
+          type: web
+          property: host
+      - key: SFTP_PORT
+        value: 2222
+      - key: SFTP_USERNAME
+        value: andbank
+      - key: SFTP_PASSWORD
+        value: sftp-test
+      - key: SFTP_REMOTE_PATH
+        value: /loans.csv
+      - key: AUTO_START_MOCK_SFTP
+        value: "false"
+      - key: SYNC_INTERVAL_MINUTES
+        value: 15
+

@@ -1,0 +1,17 @@
+Financing Institution,Entity,Credit Line Amount,Available Credit,Interest Rate
+Andbank,Aribau Ventures SL,22,800000,2.5
+Andbank,Oikos Builders SL,80000,45,3.2
+Andbank,Esteban Almirall,34,65,3.0
+Andbank,,60000,40000,2.8
+YesBank,Aribau Ventures SL,65,65,2.5
+YesBank,Oikos Builders SL,45,35,3.2
+YesBank,Esteban Almirall,365,657,3.0
+YesBank,,60000,40000,2.8
+HSBC,Aribau Ventures SL,464,356,2.5
+HSBC,Oikos Builders SL,45,34,3.2
+HSBC,Esteban Almirall,500000,30000,3.0
+HSBC,,650000,450000,2.8
+Caixa,Aribau Ventures SL,1200000,800000,2.5
+Caixa,Oikos Builders SL,35667,600000,3.2
+Caixa,Esteban Almirall,500000,356,3.0
+Caixa,,60000,40000,2.8

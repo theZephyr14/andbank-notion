@@ -1,0 +1,39 @@
+{
+  "name": "andbank-notion-sync",
+  "version": "1.0.0",
+  "description": "Sync Andbank loan data to Notion database",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "mock-bank": "tsx src/mock-bank/server.ts",
+    "mock-sftp": "tsx src/mock-sftp/server.ts",
+    "sync": "tsx src/sync-worker/index.ts",
+    "sync:loop": "tsx src/index.ts",
+    "find-db": "tsx src/helpers/find-database.ts",
+    "schema": "tsx src/helpers/check-schema.ts"
+  },
+  "keywords": [
+    "notion",
+    "andbank",
+    "sync"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "ssh2": "^1.17.0",
+    "ssh2-sftp-client": "^12.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}
