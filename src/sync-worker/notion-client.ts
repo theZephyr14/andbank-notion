@@ -130,23 +130,37 @@ export class NotionSyncClient {
   }
 
   /**
-   * Find existing page by Entity name
+   * Find existing page by Entity name AND Financing Institution
+   * This ensures we match the correct row when multiple banks have the same entity name
    */
-  private async findPageByEntity(entity: string): Promise<string | null> {
+  private async findPageByEntityAndBank(entity: string, financingInstitution: string): Promise<string | null> {
     try {
+      const titleProp = await this.getTitlePropertyName();
+      
+      // Use AND filter to match both Entity and Financing Institution
       const response = await this.notion.databases.query({
         database_id: this.databaseId,
         filter: {
-          property: 'Entity',
-          rich_text: {
-            equals: entity || '(Empty)'
-          }
+          and: [
+            {
+              property: 'Entity',
+              rich_text: {
+                equals: entity || '(Empty)'
+              }
+            },
+            {
+              property: titleProp,
+              title: {
+                equals: financingInstitution || ''
+              }
+            }
+          ]
         }
       });
 
       return response.results.length > 0 ? response.results[0].id : null;
     } catch (error) {
-      console.error(`Error finding page for entity "${entity}":`, error);
+      console.error(`Error finding page for entity "${entity}" and bank "${financingInstitution}":`, error);
       return null;
     }
   }
@@ -155,7 +169,7 @@ export class NotionSyncClient {
    * Create or update a loan record in Notion (only updates changed fields)
    */
   async upsertLoan(loan: LoanRecord): Promise<void> {
-    const existingPageId = await this.findPageByEntity(loan.entity);
+    const existingPageId = await this.findPageByEntityAndBank(loan.entity, loan.financingInstitution);
     const allProperties = await this.loanToProperties(loan);
     const changedFields: string[] = [];
 
