@@ -132,6 +132,7 @@ export class NotionSyncClient {
   /**
    * Find existing page by Entity name AND Financing Institution
    * This ensures we match the correct row when multiple banks have the same entity name
+   * Updated: Now matches by both Entity and Bank to prevent conflicts
    */
   private async findPageByEntityAndBank(entity: string, financingInstitution: string): Promise<string | null> {
     try {
