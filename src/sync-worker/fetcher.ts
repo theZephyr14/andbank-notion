@@ -92,25 +92,62 @@ export class SftpBankFetcher implements DataFetcher {
 // HTTP CSV fetcher - fetches CSV from the CSV storage service
 export class HttpCsvFetcher implements DataFetcher {
   private csvUrl: string;
+  private maxRetries: number;
+  private retryDelayMs: number;
 
   constructor(csvUrl?: string) {
     this.csvUrl = csvUrl || process.env.CSV_STORAGE_URL || 'http://localhost:10001/loans.csv';
+    this.maxRetries = 3;
+    this.retryDelayMs = 5000; // Start with 5 seconds
   }
 
   async fetch(): Promise<LoanRecord[]> {
-    try {
-      const response = await fetch(this.csvUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+    let lastError: Error | null = null;
+    
+    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
+      try {
+        const response = await fetch(this.csvUrl);
+        
+        // Handle rate limiting (429) with retry
+        if (response.status === 429) {
+          if (attempt < this.maxRetries) {
+            const delay = this.retryDelayMs * Math.pow(2, attempt); // Exponential backoff: 5s, 10s, 20s
+            console.log(`⚠️  Rate limited (429). Retrying in ${delay / 1000}s... (attempt ${attempt + 1}/${this.maxRetries + 1})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          } else {
+            throw new Error(`Rate limited (429) after ${this.maxRetries + 1} attempts`);
+          }
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        const loans = parseLoanCsv(csvText);
+        console.log(`✅ Fetched ${loans.length} loans from CSV storage (${this.csvUrl})`);
+        return loans;
+      } catch (error) {
+        lastError = error as Error;
+        
+        // If it's a network error and we have retries left, retry
+        if (attempt < this.maxRetries && (error as any).message?.includes('fetch')) {
+          const delay = this.retryDelayMs * Math.pow(2, attempt);
+          console.log(`⚠️  Network error. Retrying in ${delay / 1000}s... (attempt ${attempt + 1}/${this.maxRetries + 1})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        // If it's not a retryable error or we're out of retries, throw
+        if (attempt === this.maxRetries || !(error as any).message?.includes('429') && !(error as any).message?.includes('fetch')) {
+          break;
+        }
       }
-      const csvText = await response.text();
-      const loans = parseLoanCsv(csvText);
-      console.log(`✅ Fetched ${loans.length} loans from CSV storage (${this.csvUrl})`);
-      return loans;
-    } catch (error) {
-      console.error('❌ Error fetching CSV from HTTP:', error);
-      throw error;
     }
+    
+    console.error('❌ Error fetching CSV from HTTP after retries:', lastError);
+    throw lastError || new Error('Failed to fetch CSV after all retries');
   }
 }
 

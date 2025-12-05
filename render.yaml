@@ -3,7 +3,6 @@ services:
   - type: web
     name: csv-storage-service
     env: node
-    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run csv-storage
     envVars:
@@ -17,7 +16,6 @@ services:
   - type: web
     name: notion-sync-service
     env: node
-    plan: free
     buildCommand: npm install && npm run build
     startCommand: npm run start
     envVars:
